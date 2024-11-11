@@ -76,7 +76,7 @@ for loja in dicLojas:
     # 5- Enviar email para o gerente
 
     def enviarEmail():
-        nome = emails.loc[emails['Loja']==loja, 'Gerente'].values[0]
+        nome = emails.loc[emails['Loja']==loja, 'E-mail'].values[0]
         destinatarios = [nome, "clarahelenasena@gmail.com"]
         
         mailMessage = MIMEMultipart() #cria o email
@@ -196,4 +196,69 @@ for loja in dicLojas:
         servidor.login(mailMessage["From"], password) # conecta o servidor ao seu email
         servidor.send_message(mailMessage) # envia email
         print(f'Email da loja {loja} enviado!')
-    enviarEmail()
+    # enviarEmail()
+
+
+#Ranking de diretorias
+faturamentoLojas = vendas.groupby("Loja")[['Valor Final']].sum()
+faturamentoLojasAno = faturamentoLojas.sort_values(by="Valor Final", ascending=False)
+
+nomeArquivo = f'{diaIndicador.month}_{diaIndicador.day}_RankingAnual.xlsx'
+faturamentoLojasAno.to_excel(r'Backup Arquivos Lojas\{}'.format(nomeArquivo))
+
+vendasDia = vendas.loc[vendas['Data']==diaIndicador, :]
+faturamentoLojasDia = vendasDia.groupby('Loja')[['Valor Final']].sum()
+faturamentoLojasDia = faturamentoLojasDia.sort_values(by="Valor Final", ascending=False)
+
+nomeArquivo = f'{diaIndicador.month}_{diaIndicador.day}_RankingDia.xlsx'
+faturamentoLojasDia.to_excel(r'Backup Arquivos Lojas\{}'.format(nomeArquivo))
+
+def enviarEmail():      
+    nome = emails.loc[emails['Loja']=='Diretoria', 'E-mail'].values[0]
+    destinatarios = [nome, "clarahelenasena@gmail.com"]
+    mailMessage = MIMEMultipart() #cria o email
+    
+    mailMessage["From"] = "clarahelenasena@gmail.com" #remetente
+    mailMessage["To"] = ','.join(destinatarios) #destinatario
+    
+    mailMessage["Subject"] = f'Ranking Dia {diaIndicador.day}/{diaIndicador.month}' #cabeçalho
+    
+    # corpo do email
+    
+    mailBody = mailMessage.HTMLBody = f'''
+    <p>Prezados, bom dia</p>
+
+    <p>Melhor loja do Dia em Faturamento: Loja {faturamentoLojasDia.index[0]} com Faturamento R${faturamentoLojasDia.iloc[0, 0]}</p>
+    <p>Pior loja do Dia em Faturamento: Loja {faturamentoLojasDia.index[-1]} com Faturamento R${faturamentoLojasDia.iloc[-1, 0]}</p>
+
+    <p>Melhor loja do Ano em Faturamento: Loja {faturamentoLojasAno.index[0]} com Faturamento R${faturamentoLojasAno.iloc[0, 0]}</p>
+    <p>Pior loja do Ano em Faturamento: Loja {faturamentoLojasAno.index[-1]} com Faturamento R${faturamentoLojasAno.iloc[-1, 0]}</p>
+
+    <p>Segue em anexo os rankings do ano e do dia de todas as lojas.</p>
+    '''
+    
+    mailMessage.attach(MIMEText(mailBody, "html")) 
+
+    # anexos (pode por quantos quiser)
+    attachment1 = pathlib.Path.cwd()/caminhoBackup/f'{diaIndicador.month}_{diaIndicador.day}_RankingAnual.xlsx'
+    # abre o arquivo, lê e o adiciona ao email
+    with open(attachment1, "rb") as arquivo:
+        mailMessage.attach(MIMEApplication(arquivo.read(), name="Relatorio Ano.xlsx"))
+    # Anexo 2 
+    attachment2 = pathlib.Path.cwd()/caminhoBackup/f'{diaIndicador.month}_{diaIndicador.day}_RankingDia.xlsx'
+    # abre o arquivo, lê e o adiciona ao email
+    with open(attachment2, "rb") as arquivo:
+        mailMessage.attach(MIMEApplication(arquivo.read(), name="Relatorio DIa.xlsx"))
+    
+    
+    # conexão com o servidor
+    servidor = smtplib.SMTP("smtp.gmail.com", 587)
+    servidor.starttls() # formato de criptografia para enviar email em segurança
+    # conexao o .env para acessar password de forma segura
+    load_dotenv()
+    password = os.getenv("PASSWORD")
+    
+    servidor.login(mailMessage["From"], password) # conecta o servidor ao seu email
+    servidor.send_message(mailMessage) # envia email
+    print(f'Email da Diretoria {loja} enviado!')
+enviarEmail()
