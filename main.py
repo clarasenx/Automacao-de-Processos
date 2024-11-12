@@ -9,8 +9,8 @@ from email.mime.application import MIMEApplication
 from IPython.display import display
 from dotenv import load_dotenv
 
-
-emails = pd.read_excel(r'Bases de dados\Emails.xlsx')
+# mudar variáveis/caminhos para base de dados desejada
+emails = pd.read_excel(r'Bases de dados\Emails.xlsx') 
 lojas = pd.read_csv(r'Bases de dados\Lojas.csv',  encoding='latin-1', sep=';')
 vendas = pd.read_excel(r'Bases de dados\Vendas.xlsx')
 
@@ -54,6 +54,7 @@ metaQtdProdutosAno = 120
 metaTicketMedioDia = 500
 metaTicketMedioAno = 500
 
+# o for acessa cada loja e envia o relatorio de acordo com seus dados
 for loja in dicLojas:
     vendasLoja = dicLojas[loja]
     vendasLojaDia = vendasLoja.loc[vendasLoja['Data']==diaIndicador, :]
@@ -75,18 +76,18 @@ for loja in dicLojas:
 
     # 5- Enviar email para o gerente
 
-    def enviarEmail():
+    def enviarRelatorioLoja():
         nome = emails.loc[emails['Loja']==loja, 'E-mail'].values[0]
-        destinatarios = [nome, "clarahelenasena@gmail.com"]
+        destinatarios = [nome, "seuEmail@gmail.com"]
         
         mailMessage = MIMEMultipart() #cria o email
         
-        mailMessage["From"] = "clarahelenasena@gmail.com" #remetente
+        mailMessage["From"] = "seuEmail@gmail.com" #remetente
         mailMessage["To"] = ",".join(destinatarios) #destinatario
         
         mailMessage["Subject"] = f'OnePage Dia {diaIndicador.day}/{diaIndicador.month} - Loja {loja}' #cabeçalho
         
-        # corpo do email
+        
         if faturamentoDia >= metaFaturamentoDia:
             cor_fat_dia = 'green'
         else:
@@ -112,6 +113,7 @@ for loja in dicLojas:
         else:
             cor_ticket_ano = 'red'
         
+        # corpo do email
         mailBody = mailMessage.HTMLBody = f'''
         <p>Bom dia, {nome}</p>
 
@@ -196,7 +198,7 @@ for loja in dicLojas:
         servidor.login(mailMessage["From"], password) # conecta o servidor ao seu email
         servidor.send_message(mailMessage) # envia email
         print(f'Email da loja {loja} enviado!')
-    # enviarEmail()
+    enviarRelatorioLoja() 
 
 
 #Ranking de diretorias
@@ -213,12 +215,13 @@ faturamentoLojasDia = faturamentoLojasDia.sort_values(by="Valor Final", ascendin
 nomeArquivo = f'{diaIndicador.month}_{diaIndicador.day}_RankingDia.xlsx'
 faturamentoLojasDia.to_excel(r'Backup Arquivos Lojas\{}'.format(nomeArquivo))
 
-def enviarEmail():      
+
+def enviarRelatorioDiretoria():      
     nome = emails.loc[emails['Loja']=='Diretoria', 'E-mail'].values[0]
-    destinatarios = [nome, "clarahelenasena@gmail.com"]
+    destinatarios = [nome, "seuEmail@gmail.com"]
     mailMessage = MIMEMultipart() #cria o email
     
-    mailMessage["From"] = "clarahelenasena@gmail.com" #remetente
+    mailMessage["From"] = "seuEmail@gmail.com" #remetente
     mailMessage["To"] = ','.join(destinatarios) #destinatario
     
     mailMessage["Subject"] = f'Ranking Dia {diaIndicador.day}/{diaIndicador.month}' #cabeçalho
@@ -226,7 +229,7 @@ def enviarEmail():
     # corpo do email
     
     mailBody = mailMessage.HTMLBody = f'''
-    <p>Prezados, bom dia</p>
+    <p>Prezado, bom dia</p>
 
     <p>Melhor loja do Dia em Faturamento: Loja {faturamentoLojasDia.index[0]} com Faturamento R${faturamentoLojasDia.iloc[0, 0]}</p>
     <p>Pior loja do Dia em Faturamento: Loja {faturamentoLojasDia.index[-1]} com Faturamento R${faturamentoLojasDia.iloc[-1, 0]}</p>
@@ -248,7 +251,7 @@ def enviarEmail():
     attachment2 = pathlib.Path.cwd()/caminhoBackup/f'{diaIndicador.month}_{diaIndicador.day}_RankingDia.xlsx'
     # abre o arquivo, lê e o adiciona ao email
     with open(attachment2, "rb") as arquivo:
-        mailMessage.attach(MIMEApplication(arquivo.read(), name="Relatorio DIa.xlsx"))
+        mailMessage.attach(MIMEApplication(arquivo.read(), name="Relatorio Dia.xlsx"))
     
     
     # conexão com o servidor
@@ -261,4 +264,4 @@ def enviarEmail():
     servidor.login(mailMessage["From"], password) # conecta o servidor ao seu email
     servidor.send_message(mailMessage) # envia email
     print(f'Email da Diretoria {loja} enviado!')
-enviarEmail()
+enviarRelatorioDiretoria()
