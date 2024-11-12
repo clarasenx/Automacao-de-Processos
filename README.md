@@ -26,6 +26,7 @@ Não compartilhe a senha do email ou outras informações sensíveis. Utilize va
 1 - Alterar os caminhos para a base de dados desejada.
 
 ![image](https://github.com/user-attachments/assets/3979471c-5355-47f6-964f-bce49ce359cb)
+
 Da pasta onde os arquivos criados irão ficar também!
 
 ![image](https://github.com/user-attachments/assets/e3dc1a73-f5a7-4b70-be56-7e7fa9af8afd)
